@@ -15,27 +15,10 @@ function generateWhatsAppURL(customMessage?: string): string {
   return `${baseURL}${encodeWhatsAppMessage(message)}`;
 }
 
-function buildOrderMessage(productName: string, orderLines: Array<{ qty: string; price: number; count: number }>) {
-  const total = orderLines.reduce((sum, line) => sum + line.price * line.count, 0);
-  const lines = [
-    "Hello Namaste Biryani,",
-    "",
-    "I would like to order:",
-    "",
-    productName,
-    "",
-    ...orderLines.map((line) => `${line.qty} × ${line.count} = ₹${line.price * line.count}`),
-    "",
-    `Total = ₹${total}`,
-    "",
-    "Please confirm my order.",
-  ];
-  return encodeWhatsAppMessage(lines.join("\n"));
-}
+// legacy single-product helper removed — cart uses buildCartMessage/createCartWhatsAppURL
 
-function createWhatsAppOrderURL(productName: string, orderLines: Array<{ qty: string; price: number; count: number }>) {
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${buildOrderMessage(productName, orderLines)}`;
-}
+
+// helper removed previously to avoid an unused-declaration error
 
 // ============= ICONS =============
 const Icon = {
@@ -523,25 +506,64 @@ const PRICES = [
   { qty: "1Kg", label: "Full", price: 400 },
 ];
 
-function SignatureMenu() {
-  const [selectedQuantities, setSelectedQuantities] = useState<Record<string, Record<string, number>>>({});
+type QuantityMap = Record<string, Record<string, number>>;
 
-  const updateQuantity = (itemId: string, qty: string, delta: number) => {
-    setSelectedQuantities((prev) => {
-      const currentItem = prev[itemId] ?? {};
-      const currentCount = currentItem[qty] ?? 0;
-      const nextCount = Math.max(0, currentCount + delta);
+type CartLine = {
+  id: string;
+  title: string;
+  sub: string;
+  qty: string;
+  price: number;
+  count: number;
+};
 
-      return {
-        ...prev,
-        [itemId]: {
-          ...currentItem,
-          [qty]: nextCount,
-        },
-      };
-    });
-  };
+function buildCartItems(selectedQuantities: QuantityMap): CartLine[] {
+  return MENU_ITEMS.flatMap((item) => {
+    const quantities = selectedQuantities[item.id] ?? {};
+    return PRICES.filter((tier) => (quantities[tier.qty] ?? 0) > 0).map((tier) => ({
+      id: item.id,
+      title: item.title,
+      sub: item.sub,
+      qty: tier.qty,
+      price: tier.price,
+      count: quantities[tier.qty] ?? 0,
+    }));
+  }).filter((line) => line.count > 0);
+}
 
+function buildCartMessage(cartItems: CartLine[]) {
+  const total = cartItems.reduce((sum, line) => sum + line.price * line.count, 0);
+  const lines = [
+    "Hello Namaste Biryani,",
+    "",
+    "I would like to order:",
+    "",
+    ...cartItems.map((item) => `${item.title} ${item.sub} — ${item.qty} × ${item.count} = ₹${item.price * item.count}`),
+    "",
+    `Total = ₹${total}`,
+    "",
+    "Please confirm my order.",
+  ];
+  return encodeWhatsAppMessage(lines.join("\n"));
+}
+
+function createCartWhatsAppURL(cartItems: CartLine[]) {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${buildCartMessage(cartItems)}`;
+}
+
+function SignatureMenu({
+  selectedQuantities,
+  onUpdateQuantity,
+  cartItems,
+  cartCount,
+  cartTotal,
+}: {
+  selectedQuantities: QuantityMap;
+  onUpdateQuantity: (itemId: string, qty: string, delta: number) => void;
+  cartItems: CartLine[];
+  cartCount: number;
+  cartTotal: number;
+}) {
   return (
     <section id="menu" className="relative py-24 md:py-32 overflow-hidden">
       {/* Background */}
@@ -563,6 +585,64 @@ function SignatureMenu() {
             <div className="gold-divider max-w-xs mx-auto mt-6"></div>
           </div>
         </Reveal>
+
+        <div className="mb-10 rounded-2xl border border-[#d4af37]/20 bg-black/70 p-5 shadow-2xl backdrop-blur-md">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="font-logo text-[11px] text-[#d4af37] tracking-[0.35em]">SHOPPING CART</div>
+              <h3 className="font-display text-2xl sm:text-3xl text-white mt-2">
+                Your selected biryani basket
+              </h3>
+              <p className="font-serif-lux text-sm text-[#e8dfc6]/70 mt-2">
+                {cartCount > 0
+                  ? `${cartCount} item${cartCount === 1 ? "" : "s"} ready for checkout.`
+                  : "Use the + and - buttons to build your order."}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="rounded-xl border border-[#d4af37]/20 bg-[#ffffff]/5 px-4 py-3 text-center">
+                <div className="font-logo text-[9px] text-[#d4af37]/70 tracking-[0.2em]">ITEMS</div>
+                <div className="font-display text-xl text-white">{cartCount}</div>
+              </div>
+              <div className="rounded-xl border border-[#d4af37]/20 bg-[#ffffff]/5 px-4 py-3 text-center">
+                <div className="font-logo text-[9px] text-[#d4af37]/70 tracking-[0.2em]">TOTAL</div>
+                <div className="font-display text-xl text-[#f0c75e]">₹{cartTotal}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (cartItems.length === 0) {
+                    window.alert("Please add at least one biryani quantity before ordering.");
+                    return;
+                  }
+                  window.open(createCartWhatsAppURL(cartItems), "_blank");
+                }}
+                className="btn-gold px-5 py-3 rounded text-xs"
+              >
+                Order Cart
+              </button>
+            </div>
+          </div>
+
+          {cartItems.length > 0 ? (
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {cartItems.map((item) => (
+                <div key={`${item.id}-${item.qty}`} className="rounded-xl border border-[#ffffff]/10 bg-[#0a0a0a]/70 px-3 py-3 text-sm text-[#e8dfc6]/80">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-cinzel text-[#f0c75e]">{item.title} {item.sub}</span>
+                    <span className="font-display text-white">{item.qty} × {item.count}</span>
+                  </div>
+                  <div className="mt-1 text-right font-display text-[#f0c75e]">₹{item.price * item.count}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-dashed border-[#d4af37]/20 bg-[#ffffff]/5 px-4 py-3 text-sm text-[#e8dfc6]/70">
+              No items in the cart yet. Adjust the quantity buttons below to start your order.
+            </div>
+          )}
+        </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-6">
           {MENU_ITEMS.map((item, i) => {
@@ -627,7 +707,7 @@ function SignatureMenu() {
                               <div className="flex items-center gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => updateQuantity(item.id, tier.qty, -1)}
+                                  onClick={() => onUpdateQuantity(item.id, tier.qty, -1)}
                                   disabled={count === 0}
                                   className="grid h-9 w-9 place-items-center rounded-md border border-[#d4af37]/30 bg-[#0a0a0a] text-[#f0c75e] transition-all hover:border-[#d4af37] hover:bg-[#d4af37]/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                                   aria-label={`Decrease ${tier.qty}`}
@@ -637,7 +717,7 @@ function SignatureMenu() {
                                 <span className="min-w-[2rem] text-center font-display text-lg text-white">{count}</span>
                                 <button
                                   type="button"
-                                  onClick={() => updateQuantity(item.id, tier.qty, 1)}
+                                  onClick={() => onUpdateQuantity(item.id, tier.qty, 1)}
                                   className="grid h-9 w-9 place-items-center rounded-md border border-[#d4af37]/30 bg-[#0a0a0a] text-[#f0c75e] transition-all hover:border-[#d4af37] hover:bg-[#d4af37]/10 active:scale-95"
                                   aria-label={`Increase ${tier.qty}`}
                                 >
@@ -672,16 +752,15 @@ function SignatureMenu() {
                     <button
                       type="button"
                       onClick={() => {
-                        const productName = `${item.title} ${item.sub}`;
-                        if (orderLines.length === 0) {
-                          window.alert("Please select at least one quantity before ordering.");
+                        if (cartItems.length === 0) {
+                          window.alert("Please add at least one biryani quantity before ordering.");
                           return;
                         }
-                        window.open(createWhatsAppOrderURL(productName, orderLines), "_blank");
+                        window.open(createCartWhatsAppURL(cartItems), "_blank");
                       }}
                       className="btn-gold w-full mt-5 py-3 rounded text-xs"
                     >
-                      Order Now
+                      Order Cart
                     </button>
                   </div>
                 </div>
@@ -711,7 +790,7 @@ function Experience() {
     <section id="experience" className="relative h-screen min-h-[700px] overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img src="/images/chef-dum.jpg" alt="Chef" className="w-full h-full object-cover" />
+        {/* Removed /images/chef-dum.jpg per user request */}
         <div className="absolute inset-0 bg-black/70"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black via-black/40 to-black"></div>
       </div>
@@ -874,7 +953,7 @@ const GALLERY = [
   
   { src: "/images/spices-fall.jpg", label: "Whole Spices" },
   { src: "/images/rice-steam.jpg", label: "Saffron Basmati" },
-  { src: "/images/chef-dum.jpg", label: "Chef's Touch" },
+  // removed chef-dum image per user request
 ];
 
 function Gallery() {
@@ -1128,6 +1207,28 @@ function MusicPlayer() {
 
 // ============= APP =============
 export default function App() {
+  const [selectedQuantities, setSelectedQuantities] = useState<QuantityMap>({});
+
+  const updateQuantity = (itemId: string, qty: string, delta: number) => {
+    setSelectedQuantities((prev) => {
+      const currentItem = prev[itemId] ?? {};
+      const currentCount = currentItem[qty] ?? 0;
+      const nextCount = Math.max(0, currentCount + delta);
+
+      return {
+        ...prev,
+        [itemId]: {
+          ...currentItem,
+          [qty]: nextCount,
+        },
+      };
+    });
+  };
+
+  const cartItems = buildCartItems(selectedQuantities);
+  const cartCount = cartItems.reduce((sum, item) => sum + item.count, 0);
+  const cartTotal = cartItems.reduce((sum, item) => sum + item.price * item.count, 0);
+
   // Preload images
   useEffect(() => {
     const imgs = [
@@ -1156,7 +1257,13 @@ export default function App() {
       <Nav />
       <Hero />
       <Story />
-      <SignatureMenu />
+      <SignatureMenu
+        selectedQuantities={selectedQuantities}
+        onUpdateQuantity={updateQuantity}
+        cartItems={cartItems}
+        cartCount={cartCount}
+        cartTotal={cartTotal}
+      />
       <Experience />
       <Reviews />
       <Gallery />
