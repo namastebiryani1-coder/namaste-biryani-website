@@ -82,6 +82,16 @@ const Icon = {
       <path d="M17.5 14.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6 0-.3-.2-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.2-.2.2-.3.3-.5.1-.2.1-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 3 1.2 3.2c.1.2 2.1 3.3 5.2 4.6 3 1.2 3 .8 3.6.8.5 0 1.7-.7 1.9-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.4zM12 2a10 10 0 00-8.5 15.2L2 22l4.9-1.5A10 10 0 1012 2z" />
     </svg>
   ),
+  Play: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M5 3v18l15-9L5 3z" />
+    </svg>
+  ),
+  Pause: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+    </svg>
+  ),
   MapPin: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
@@ -223,15 +233,7 @@ function Nav() {
               {l.label}
             </a>
           ))}
-          <a
-            href={generateWhatsAppURL()}
-            onClick={() => setOpen(false)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-gold px-10 py-3 rounded-sm text-sm mt-4"
-          >
-            Order Now
-          </a>
+          
         </div>
       </div>
     </>
@@ -342,9 +344,6 @@ function Hero() {
 
         <Reveal delay={450}>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href={generateWhatsAppURL()} target="_blank" rel="noopener noreferrer" className="btn-gold px-10 py-4 rounded-sm text-sm sm:text-base w-full sm:w-auto">
-              Order Now
-            </a>
             <a href="#menu" className="btn-ghost-gold px-10 py-4 rounded-sm text-sm sm:text-base w-full sm:w-auto">
               Explore Menu
             </a>
@@ -586,64 +585,6 @@ function SignatureMenu({
           </div>
         </Reveal>
 
-        <div className="mb-10 rounded-2xl border border-[#d4af37]/20 bg-black/70 p-5 shadow-2xl backdrop-blur-md">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="font-logo text-[11px] text-[#d4af37] tracking-[0.35em]">SHOPPING CART</div>
-              <h3 className="font-display text-2xl sm:text-3xl text-white mt-2">
-                Your selected biryani basket
-              </h3>
-              <p className="font-serif-lux text-sm text-[#e8dfc6]/70 mt-2">
-                {cartCount > 0
-                  ? `${cartCount} item${cartCount === 1 ? "" : "s"} ready for checkout.`
-                  : "Use the + and - buttons to build your order."}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-xl border border-[#d4af37]/20 bg-[#ffffff]/5 px-4 py-3 text-center">
-                <div className="font-logo text-[9px] text-[#d4af37]/70 tracking-[0.2em]">ITEMS</div>
-                <div className="font-display text-xl text-white">{cartCount}</div>
-              </div>
-              <div className="rounded-xl border border-[#d4af37]/20 bg-[#ffffff]/5 px-4 py-3 text-center">
-                <div className="font-logo text-[9px] text-[#d4af37]/70 tracking-[0.2em]">TOTAL</div>
-                <div className="font-display text-xl text-[#f0c75e]">₹{cartTotal}</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (cartItems.length === 0) {
-                    window.alert("Please add at least one biryani quantity before ordering.");
-                    return;
-                  }
-                  window.open(createCartWhatsAppURL(cartItems), "_blank");
-                }}
-                className="btn-gold px-5 py-3 rounded text-xs"
-              >
-                Order Cart
-              </button>
-            </div>
-          </div>
-
-          {cartItems.length > 0 ? (
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              {cartItems.map((item) => (
-                <div key={`${item.id}-${item.qty}`} className="rounded-xl border border-[#ffffff]/10 bg-[#0a0a0a]/70 px-3 py-3 text-sm text-[#e8dfc6]/80">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-cinzel text-[#f0c75e]">{item.title} {item.sub}</span>
-                    <span className="font-display text-white">{item.qty} × {item.count}</span>
-                  </div>
-                  <div className="mt-1 text-right font-display text-[#f0c75e]">₹{item.price * item.count}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-4 rounded-xl border border-dashed border-[#d4af37]/20 bg-[#ffffff]/5 px-4 py-3 text-sm text-[#e8dfc6]/70">
-              No items in the cart yet. Adjust the quantity buttons below to start your order.
-            </div>
-          )}
-        </div>
-
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-6">
           {MENU_ITEMS.map((item, i) => {
             const quantities = selectedQuantities[item.id] ?? {};
@@ -749,24 +690,69 @@ function SignatureMenu({
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (cartItems.length === 0) {
-                          window.alert("Please add at least one biryani quantity before ordering.");
-                          return;
-                        }
-                        window.open(createCartWhatsAppURL(cartItems), "_blank");
-                      }}
-                      className="btn-gold w-full mt-5 py-3 rounded text-xs"
-                    >
-                      Order Cart
-                    </button>
                   </div>
                 </div>
               </Reveal>
             );
           })}
+        </div>
+
+        <div className="mt-10 rounded-2xl border border-[#d4af37]/20 bg-black/70 p-5 shadow-2xl backdrop-blur-md">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="font-logo text-[11px] text-[#d4af37] tracking-[0.35em]">SHOPPING CART</div>
+              <h3 className="font-display text-2xl sm:text-3xl text-white mt-2">
+                Your selected biryani basket
+              </h3>
+              <p className="font-serif-lux text-sm text-[#e8dfc6]/70 mt-2">
+                {cartCount > 0
+                  ? `${cartCount} item${cartCount === 1 ? "" : "s"} ready for checkout.`
+                  : "Use the + and - buttons to build your order."}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="rounded-xl border border-[#d4af37]/20 bg-[#ffffff]/5 px-4 py-3 text-center">
+                <div className="font-logo text-[9px] text-[#d4af37]/70 tracking-[0.2em]">ITEMS</div>
+                <div className="font-display text-xl text-white">{cartCount}</div>
+              </div>
+              <div className="rounded-xl border border-[#d4af37]/20 bg-[#ffffff]/5 px-4 py-3 text-center">
+                <div className="font-logo text-[9px] text-[#d4af37]/70 tracking-[0.2em]">TOTAL</div>
+                <div className="font-display text-xl text-[#f0c75e]">₹{cartTotal}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (cartItems.length === 0) {
+                    window.alert("Please add at least one biryani quantity before ordering.");
+                    return;
+                  }
+                  window.open(createCartWhatsAppURL(cartItems), "_blank");
+                }}
+                className="btn-gold px-5 py-3 rounded text-xs"
+              >
+                Order Cart
+              </button>
+            </div>
+          </div>
+
+          {cartItems.length > 0 ? (
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {cartItems.map((item) => (
+                <div key={`${item.id}-${item.qty}`} className="rounded-xl border border-[#ffffff]/10 bg-[#0a0a0a]/70 px-3 py-3 text-sm text-[#e8dfc6]/80">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-cinzel text-[#f0c75e]">{item.title} {item.sub}</span>
+                    <span className="font-display text-white">{item.qty} × {item.count}</span>
+                  </div>
+                  <div className="mt-1 text-right font-display text-[#f0c75e]">₹{item.price * item.count}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-dashed border-[#d4af37]/20 bg-[#ffffff]/5 px-4 py-3 text-sm text-[#e8dfc6]/70">
+              No items in the cart yet. Adjust the quantity buttons below to start your order.
+            </div>
+          )}
         </div>
 
         <Reveal delay={600}>
@@ -1151,9 +1137,52 @@ function MusicPlayer() {
     audio.addEventListener('error', onError);
     audio.addEventListener('canplaythrough', onCanPlayThrough);
 
+    // Attempt autoplay on load unless user opted out previously
+    const savedPref = localStorage.getItem('nb_music_enabled');
+    const shouldAutoplay = savedPref !== 'false';
+
+    let interactionEvents: Array<{ type: string; handler: () => void }> = [];
+
+    const tryPlay = async () => {
+      try {
+        await audio.play();
+        setIsPlaying(true);
+        localStorage.setItem('nb_music_enabled', 'true');
+      } catch (err) {
+        // Autoplay blocked — wait for user interaction if allowed
+        setIsPlaying(false);
+      }
+    };
+
+    if (shouldAutoplay) {
+      // Try to play immediately
+      tryPlay();
+
+      // If blocked, start after first user interaction (click, touch, scroll)
+      const onUserInteract = async () => {
+        if (audio.paused) {
+          try {
+            await audio.play();
+            setIsPlaying(true);
+            localStorage.setItem('nb_music_enabled', 'true');
+          } catch (e) {
+            // still blocked or error; ignore silently
+          }
+        }
+      };
+
+      const events = ['click', 'touchstart', 'scroll'];
+      events.forEach((ev) => {
+        window.addEventListener(ev, onUserInteract, { once: true, passive: true });
+        interactionEvents.push({ type: ev, handler: onUserInteract });
+      });
+    }
+
     return () => {
       audio.removeEventListener('error', onError);
       audio.removeEventListener('canplaythrough', onCanPlayThrough);
+      // cleanup interaction listeners
+      interactionEvents.forEach((ie) => window.removeEventListener(ie.type, ie.handler as EventListener));
     };
   }, []);
 
@@ -1169,12 +1198,15 @@ function MusicPlayer() {
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
+      localStorage.setItem('nb_music_enabled', 'false');
       return;
     }
 
     try {
       await audio.play();
       setIsPlaying(true);
+      localStorage.setItem('nb_music_enabled', 'true');
+      setAudioError(null);
     } catch (error) {
       console.warn('Music playback requires user interaction.', error);
       setAudioError('Playback failed. Please try again.');
@@ -1183,7 +1215,7 @@ function MusicPlayer() {
 
   return (
     <>
-      <audio ref={audioRef} src={audioSrc} preload="none" />
+      <audio ref={audioRef} src={audioSrc} preload="auto" />
       <div className="fixed bottom-24 left-6 z-40 flex flex-wrap items-center gap-3 rounded-full border border-[#d4af37]/30 bg-[#0a0a0a]/90 px-4 py-2 text-sm text-[#f5f1e8] shadow-2xl backdrop-blur-md sm:bottom-6 sm:left-4">
         <div className="flex items-center gap-2">
           <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#d4af37] animate-pulse"></span>
@@ -1194,8 +1226,10 @@ function MusicPlayer() {
           onClick={togglePlayback}
           className="rounded-full bg-[#d4af37] px-3 py-2 text-xs font-semibold uppercase text-[#0a0a0a] transition hover:bg-[#f0c75e]"
           aria-label={isPlaying ? 'Pause background music' : 'Play background music'}
+          title={isPlaying ? 'Pause Music' : 'Play Music'}
         >
-          {isPlaying ? 'Pause' : 'Play'}
+          <span className="sr-only">{isPlaying ? 'Pause Music' : 'Play Music'}</span>
+          {isPlaying ? <Icon.Pause /> : <Icon.Play />}
         </button>
         {audioError && (
           <div className="w-full text-left text-[10px] text-red-300">{audioError}</div>
